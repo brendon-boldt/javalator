@@ -38,13 +38,18 @@ public class PredictionNode {
 		switch (classStrings[classStrings.length-1]) {
 			case "VariableDeclarationFragment":
 				if (children.size() == 2)
-					string += children.get(0) + "= " + children.get(1);
+					string += children.get(0).toSourceString()
+						+ "= " + children.get(1).toSourceString();
 				else
-					string += children.get(0);
+					string += children.get(0).toSourceString();
 				break;
 				
 			case "SimpleType":
 				string += this.toString();
+				break;
+
+			case "QualifiedName":
+				string += children.get(1);
 				break;
 
 			case "MethodInvocation":
@@ -52,7 +57,12 @@ public class PredictionNode {
 				break;
 
 			case "Assignment":
-				string += children.get(0) + "= " + children.get(1);
+				// Sometimes only has one child?
+				if (children.size() > 1)
+					string += children.get(0).toSourceString()
+						+ "= " + children.get(1).toSourceString();
+				else
+					string += children.get(0).toSourceString() + "= ";
 				break;
 				
 			default:

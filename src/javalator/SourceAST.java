@@ -3,6 +3,7 @@ package javalator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -20,15 +21,21 @@ public class SourceAST {
 	ASTParser parser;
 	ArrayList<String> tokens;
 	StringBuilder currentToken = new StringBuilder();
-	
+
+
     public static String getClassString(ASTNode node) {
         String[] list = node.getClass().toString().split("\\.");
         return list[list.length-1];
 	}
-
+    
+    
 	ASTVisitor visitor = new ASTVisitor() {
 		boolean inMethod = false;
 		int depth = 0, prevDepth = 0;
+
+		// Will need to account for methods/variables with the same name
+		private Map<String, Integer> names = new HashMap<>();
+		int nameCounter = 0;
 
 		public void preVisit(ASTNode node) {
 			++depth;
@@ -36,6 +43,8 @@ public class SourceAST {
 				depth = 0;
 				prevDepth = 0;
 				inMethod = true;
+				names = new HashMap<>();
+				nameCounter = 0;
 			} else if (inMethod == true) {
 				if (node instanceof org.eclipse.jdt.core.dom.Statement) {
 					depth = 0;
@@ -50,9 +59,20 @@ public class SourceAST {
 					currentToken.append("{");
 				else
 					currentToken.append("_" + node.getNodeType());
-				if (node instanceof org.eclipse.jdt.core.dom.Expression) {
-//					currentToken.append("$" + ((Expression) node).resolveTypeBinding());
+				
+				if (node instanceof org.eclipse.jdt.core.dom.Name) {
+					String name = node.toString();
+					if (!names.containsKey(name)) {
+						names.put(name, nameCounter++);
+					}
+					currentToken.append("-" + names.get(name));
+				} else if (node instanceof org.eclipse.jdt.core.dom.Type) {
+					currentToken.append(":" + node.toString());
 				}
+
+//				if (node instanceof org.eclipse.jdt.core.dom.Expression) {
+//					currentToken.append("$" + ((Expression) node).resolveTypeBinding());
+//				}
 			}
 		}
 
@@ -92,8 +112,6 @@ public class SourceAST {
 		cu.accept(visitor);
 		return tokens;
 	}
-	
-	
 	
 	/**
 	 * This AST constructor includes information for types.
