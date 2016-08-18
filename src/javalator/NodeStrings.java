@@ -15,16 +15,17 @@ public class NodeStrings {
 		put(EndBlock.class,													"}");
 		put(org.eclipse.jdt.core.dom.ReturnStatement.class,					"return ");
 		put(org.eclipse.jdt.core.dom.QualifiedName.class,					"");
-		put(org.eclipse.jdt.core.dom.SimpleName.class,						"NAME ");
-		put(org.eclipse.jdt.core.dom.PrimitiveType.class,					"PTYPE ");
-		put(org.eclipse.jdt.core.dom.SimpleType.class,						"RTYPE ");
+		put(org.eclipse.jdt.core.dom.SimpleName.class,						"NAME");
+		put(org.eclipse.jdt.core.dom.PrimitiveType.class,					"PTYPE");
+		put(org.eclipse.jdt.core.dom.SimpleType.class,						"RTYPE");
 		put(org.eclipse.jdt.core.dom.VariableDeclarationStatement.class,	"");
 		put(org.eclipse.jdt.core.dom.ExpressionStatement.class,				"");
 		put(org.eclipse.jdt.core.dom.NumberLiteral.class,					"#");
-		put(org.eclipse.jdt.core.dom.MethodInvocation.class,				"METHOD() ");
+		put(org.eclipse.jdt.core.dom.MethodInvocation.class,				"METHOD()");
+		put(org.eclipse.jdt.core.dom.InfixExpression.class,					"");
 	}};
 	
-	static String get(Class<?> c) {
+	public static String get(Class<?> c) {
 		if (strings.containsKey(c)) 
 			return strings.get(c);
 		else {

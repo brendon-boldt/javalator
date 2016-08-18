@@ -1,4 +1,4 @@
-package javalator;
+package javalator.node;
 
 import java.util.ArrayList;
 
@@ -26,7 +26,14 @@ public class PredictionNode {
 	@Override
 	public String toString() {
 		if (string == null) {
-			string = NodeStrings.get(this.type);
+			string = javalator.NodeStrings.get(this.type);
+			if (this instanceof TypeNode) {
+				string += ":" + ((TypeNode) this).varType;
+			} else if (this instanceof NameNode) {
+				string += "-" + ((NameNode) this).number;
+			} else if (this instanceof OperatorNode) {
+				string += ((OperatorNode) this).operatorString;
+			}
 		}
 		return string;
 	}
@@ -41,19 +48,19 @@ public class PredictionNode {
 					string += children.get(0).toSourceString()
 						+ "= " + children.get(1).toSourceString();
 				else
-					string += children.get(0).toSourceString();
+					string += children.get(0).toSourceString() + " ";
 				break;
 				
 			case "SimpleType":
-				string += this.toString();
+				string += this.toString() + " ";
 				break;
 
 			case "QualifiedName":
-				string += children.get(1);
+				string += children.get(1) + " ";
 				break;
 
 			case "MethodInvocation":
-				string += this.toString();
+				string += this.toString() + " ";
 				break;
 
 			case "Assignment":
@@ -65,8 +72,13 @@ public class PredictionNode {
 					string += children.get(0).toSourceString() + "= ";
 				break;
 				
+			case "InfixExpression":
+				string += children.get(0).toSourceString()
+					+ this.toString() + " " + children.get(1).toSourceString();
+				break;
+				
 			default:
-				string += this.toString();
+				string += this.toString() + " "; 
 				for (PredictionNode child : children) {
 					string += child.toSourceString();
 				}

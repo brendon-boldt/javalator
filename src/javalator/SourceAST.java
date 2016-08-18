@@ -65,9 +65,12 @@ public class SourceAST {
 					if (!names.containsKey(name)) {
 						names.put(name, nameCounter++);
 					}
-					currentToken.append("-" + names.get(name));
+					currentToken.append(":" + names.get(name));
 				} else if (node instanceof org.eclipse.jdt.core.dom.Type) {
 					currentToken.append(":" + node.toString());
+				} else if (node instanceof org.eclipse.jdt.core.dom.InfixExpression) {
+					currentToken.append(":"
+							+ ((org.eclipse.jdt.core.dom.InfixExpression) node).getOperator());
 				}
 
 //				if (node instanceof org.eclipse.jdt.core.dom.Expression) {

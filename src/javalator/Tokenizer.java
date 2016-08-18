@@ -16,7 +16,6 @@ public class Tokenizer {
 
 	private List<String> sourceDirs;
 	
-	
 	static BiPredicate<Path, BasicFileAttributes> javaMatcher = new BiPredicate<Path, BasicFileAttributes>() {
 		Pattern pattern = Pattern.compile(".+\\.java$");
 		public boolean test(Path p, BasicFileAttributes bfa) {
