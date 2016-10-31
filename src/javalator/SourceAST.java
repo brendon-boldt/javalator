@@ -21,12 +21,45 @@ public class SourceAST {
 	ASTParser parser;
 	ArrayList<String> tokens;
 	StringBuilder currentToken = new StringBuilder();
+	
+	public boolean nameFlag 		= false;
+	public boolean typeFlag 		= false;
+	public boolean operatorFlag 	= false;
+	public boolean literalFlag	 	= false;
+	
+	public String syntaxDelimiter = "_";
+	public String infoDelimiter = ":";
 
 
     public static String getClassString(ASTNode node) {
         String[] list = node.getClass().toString().split("\\.");
         return list[list.length-1];
 	}
+    
+    private static boolean hasOperator(ASTNode node) {
+    	return node instanceof org.eclipse.jdt.core.dom.InfixExpression
+    			|| node instanceof org.eclipse.jdt.core.dom.PrefixExpression
+    			|| node instanceof org.eclipse.jdt.core.dom.PostfixExpression;
+    }
+
+    private static String getOperator(ASTNode node) {
+    	if (node instanceof org.eclipse.jdt.core.dom.InfixExpression) {
+    		return ((org.eclipse.jdt.core.dom.InfixExpression) node).getOperator().toString();
+    	} else if (node instanceof org.eclipse.jdt.core.dom.PostfixExpression) {
+    		return ((org.eclipse.jdt.core.dom.PostfixExpression) node).getOperator().toString();
+    	} else if (node instanceof org.eclipse.jdt.core.dom.PrefixExpression) {
+    		return ((org.eclipse.jdt.core.dom.PrefixExpression) node).getOperator().toString();
+    	}
+    	return "";
+    }
+    
+    private static boolean isImportantNumber(String str) {
+    	return str.equals("0")
+    			|| str.equals("0L")
+    			|| str.equals("0X0")
+    			|| str.equals("1")
+    			|| str.equals("1L");
+    }
     
     
 	ASTVisitor visitor = new ASTVisitor() {
@@ -36,15 +69,19 @@ public class SourceAST {
 		// Will need to account for methods/variables with the same name
 		private Map<String, Integer> names = new HashMap<>();
 		int nameCounter = 0;
+		
+		ASTNode originalMethodNode;
 
+		int counter = 0;
 		public void preVisit(ASTNode node) {
 			++depth;
-			if (node.getClass() == MethodDeclaration.class) {
+			if (!inMethod && node.getClass() == MethodDeclaration.class) {
 				depth = 0;
 				prevDepth = 0;
 				inMethod = true;
 				names = new HashMap<>();
 				nameCounter = 0;
+				originalMethodNode = (MethodDeclaration) node;
 			} else if (inMethod == true) {
 				if (node instanceof org.eclipse.jdt.core.dom.Statement) {
 					depth = 0;
@@ -55,22 +92,39 @@ public class SourceAST {
 				}
 				if (prevDepth < depth) currentToken.append("(");
 //				currentToken.append("_" + getClassString(node) + ":" + depth);
-				if (node instanceof org.eclipse.jdt.core.dom.Block)
+				if (node instanceof org.eclipse.jdt.core.dom.Block) {
+					counter++;
 					currentToken.append("{");
-				else
-					currentToken.append("_" + node.getNodeType());
+				} else {
+					currentToken.append(syntaxDelimiter + node.getNodeType());
+//					currentToken.append(syntaxDelimiter + getClassString(node));
+				}
 				
-				if (node instanceof org.eclipse.jdt.core.dom.Name) {
+//				{
+//					for (int i = 0; i < depth; i++) {
+//						System.out.print("  ");
+//					}
+//					System.out.println(getClassString(node));
+//				}
+				
+				if (nameFlag && node instanceof org.eclipse.jdt.core.dom.Name) {
 					String name = node.toString();
 					if (!names.containsKey(name)) {
 						names.put(name, nameCounter++);
 					}
-					currentToken.append(":" + names.get(name));
-				} else if (node instanceof org.eclipse.jdt.core.dom.Type) {
-					currentToken.append(":" + node.toString());
-				} else if (node instanceof org.eclipse.jdt.core.dom.InfixExpression) {
-					currentToken.append(":"
-							+ ((org.eclipse.jdt.core.dom.InfixExpression) node).getOperator());
+					currentToken.append(infoDelimiter + names.get(name));
+				} else if (typeFlag && node instanceof org.eclipse.jdt.core.dom.Type) {
+					currentToken.append(infoDelimiter + node.toString().replace(' ', '-'));
+				} else if (operatorFlag && hasOperator(node)) {
+					String op = getOperator(node);
+					currentToken.append(infoDelimiter
+							+ op);
+				} else if (literalFlag && node instanceof org.eclipse.jdt.core.dom.NumberLiteral) {
+					if (isImportantNumber(node.toString())) {
+						currentToken.append(infoDelimiter + node);
+					}
+				} else if (literalFlag && node instanceof org.eclipse.jdt.core.dom.BooleanLiteral) {
+					currentToken.append(infoDelimiter + node);
 				}
 
 //				if (node instanceof org.eclipse.jdt.core.dom.Expression) {
@@ -80,13 +134,19 @@ public class SourceAST {
 		}
 
 		public void postVisit(ASTNode node) {
-			if (inMethod && prevDepth > depth && depth >= 0) currentToken.append(")");
+			if (inMethod && prevDepth > depth && depth >= 0)
+				currentToken.append(")");
 			prevDepth = depth--;
-			if (node instanceof org.eclipse.jdt.core.dom.Block) {
+			if (inMethod && node instanceof org.eclipse.jdt.core.dom.Block) {
+				counter--;
 				tokens.add(currentToken.toString());
 				tokens.add("}");
 				currentToken = new StringBuilder();
-			} else if (node.getClass() == MethodDeclaration.class) {
+			//} else if (node.getClass() == MethodDeclaration.class) {
+			} else if (node == originalMethodNode) {
+				if (counter != 0) {
+					System.exit(counter);
+				}
 				inMethod = false;
 				tokens.add(currentToken.toString());
 				tokens.add("\n");

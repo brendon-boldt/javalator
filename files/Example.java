@@ -1,9 +1,11 @@
 public class Example {
 	
-	public void foo() {
-		int x = 0;
-		int y = 1;
-		int z = x + y;
-		return x + z;
+	int foo() {
+		  int x = obj.getInt();
+		  if (x > 0) {
+		    x = x + 5;
+		  }
+		  return x;
 	}
+
 }

@@ -73,8 +73,13 @@ public class PredictionNode {
 				break;
 				
 			case "InfixExpression":
-				string += children.get(0).toSourceString()
-					+ this.toString() + " " + children.get(1).toSourceString();
+				if (children.size() > 1) {
+					string += children.get(0).toSourceString()
+						+ this.toString() + " " + children.get(1).toSourceString();
+				} else {
+					string += children.get(0).toSourceString() + this.toString() + " ";
+					
+				}
 				break;
 				
 			default:

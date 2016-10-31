@@ -42,6 +42,9 @@ public class Sourcifier {
 			} else {
 				return new PredictionNode(typeClass);
 			}
+		} else if (string.equals("super")) {
+			// TODO might be unnecessary
+			return new PredictionNode(Object.class);
 		} else {
 			int typeInt = Integer.parseInt(string);
 //			System.out.println(ASTNode.nodeClassForType(typeInt));
